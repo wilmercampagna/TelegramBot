@@ -1,0 +1,35 @@
+{
+  "radicado": [
+    "\\b([A-Z][0-9]{2,5}[\\-][0-9]{2,5}[\\-][0-9]{4})\\b",
+    "(?:radicado|rad(?:icaci[oó]n)?|n[uú]mero de radicado)[\\s.:]*[Nn][oó]?\\.?\\s*([A-Za-z0-9][A-Za-z0-9\\-\\.\\/]+)",
+    "(?:radicado|rad\\.?)[\\s.:]+([A-Za-z0-9\\-\\.\\/ ]{4,30})",
+    "(?:oficio|comunicaci[oó]n)\\s+(?:n[uú]mero|no\\.?|#)\\s*([A-Za-z0-9\\-\\.]+)"
+  ],
+  "fecha": [
+    "(?:bogot[aá]|medell[ií]n|cali|barranquilla|cartagena|bucaramanga|pereira|manizales|c[uú]cuta|ibagu[eé]|villavicencio|pasto|monter[ií]a|neiva|santa\\s*marta|popay[aá]n|sincelejo|tunja|florencia|arauca|mocoa|leticia|mit[uú]|in[ií]rida|puerto\\s*carre[ñn]o|san\\s*jos[eé]\\s*del\\s*guaviare|yopal|riohacha|quibd[oó]|armenia)[,\\s]*(?:D\\.?\\s*C\\.?)?[,\\s]+(?:a\\s+)?(?:los\\s+)?([0-9]{1,2})\\s+de\\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\\s+(?:de(?:l)?\\s+)?([0-9]{4})",
+    "(?:fecha)[\\s.:]+([0-9]{1,2})\\s+de\\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\\s+(?:de(?:l)?\\s+)?([0-9]{4})",
+    "(?:fecha)[\\s.:]+([0-9]{1,2})[/\\-]([0-9]{1,2})[/\\-]([0-9]{2,4})"
+  ],
+  "asunto": [
+    "[Aa]sunto[\\s.:]+(.+?)(?:\\n|$)",
+    "(?:[Rr]ef\\.?|[Rr]eferencia)[\\s.:]+(.+?)(?:\\n|$)"
+  ],
+  "solicitudes": [
+    "(?:[Ss]e\\s+(?:solicita|recomienda|requiere))[^.]*\\.",
+    "(?:[Ss]olicit[ao]|[Rr]equie(?:re|ro)|[Ss]e\\s+sirva|[Pp]etici[oó]n)[^.]*\\."
+  ],
+  "meses": {
+    "enero": "01",
+    "febrero": "02",
+    "marzo": "03",
+    "abril": "04",
+    "mayo": "05",
+    "junio": "06",
+    "julio": "07",
+    "agosto": "08",
+    "septiembre": "09",
+    "octubre": "10",
+    "noviembre": "11",
+    "diciembre": "12"
+  }
+}
