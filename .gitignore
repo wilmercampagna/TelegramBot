@@ -3,4 +3,5 @@ dist/
 .env
 botId.md
 temp/
+logs/
 *.log

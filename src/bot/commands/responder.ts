@@ -1,7 +1,8 @@
 import { Bot, CommandContext, Context } from 'grammy';
-import { updateEntryStatus, findEntryByCode } from '../../services/excel.service';
+import { updateEntryStatus, findEntryByCode, generateResponseCode } from '../../services/excel.service';
 import { generateDraftResponse } from '../../services/docgen.service';
-import { uploadFile, ensureFolderExists } from '../../services/onedrive.service';
+import { uploadFile, ensureFolderExists, downloadFile, findFileByCode } from '../../services/onedrive.service';
+import { extractDocumentData } from '../../services/extraction.service';
 import { getGroupConfig } from '../../utils/config';
 import { getCachedDocumentData } from '../../utils/cache';
 import { DocumentData } from '../../types/document.types';
@@ -19,26 +20,15 @@ async function handleResponder(ctx: CommandContext<Context>): Promise<void> {
     return;
   }
 
-  const args = ctx.match?.toString().trim();
-  if (!args) {
+  const codeOficio = ctx.match?.toString().trim();
+  if (!codeOficio) {
     await ctx.reply(
-      'Uso: /responder <codigo_oficio> <codigo_respuesta>\n' +
-      'Ejemplo: /responder C4234-585-2024 C4221-123-2026'
+      'Uso: /responder <codigo_oficio>\n' +
+      'Ejemplo: /responder C4234-585-2024\n\n' +
+      'El codigo de respuesta (JCP-XXX-2026) se genera automaticamente.'
     );
     return;
   }
-
-  const parts = args.split(/\s+/);
-  if (parts.length < 2) {
-    await ctx.reply(
-      'Debes indicar el codigo del oficio y el codigo de respuesta.\n' +
-      'Ejemplo: /responder C4234-585-2024 C4221-123-2026'
-    );
-    return;
-  }
-
-  const codeOficio = parts[0];
-  const codeRespuesta = parts[1];
 
   try {
     // Verificar que el oficio existe
@@ -64,8 +54,14 @@ async function handleResponder(ctx: CommandContext<Context>): Promise<void> {
 
     const fechaRespuesta = new Date().toLocaleDateString('es-CO');
 
+    // Generar codigo de respuesta automaticamente
+    const codeRespuesta = await generateResponseCode(
+      config.onedriveFolderPath,
+      config.excelFileName
+    );
+
     // Actualizar Excel
-    await ctx.reply('Actualizando estado en Excel...');
+    await ctx.reply(`Codigo de respuesta generado: ${codeRespuesta}\nActualizando Excel...`);
     await updateEntryStatus(
       config.onedriveFolderPath,
       config.excelFileName,
@@ -83,16 +79,26 @@ async function handleResponder(ctx: CommandContext<Context>): Promise<void> {
       `Fecha respuesta: ${fechaRespuesta}`
     );
 
-    // Generar borrador de respuesta si hay datos en cache
-    const cachedData = getCachedDocumentData(codeOficio);
-    if (cachedData) {
-      await generateAndSendDraft(ctx, config, cachedData, codeRespuesta);
-    } else {
-      await ctx.reply(
-        'No se encontraron datos del documento en cache para generar borrador.\n' +
-        'El borrador solo se genera si el documento fue procesado con /gestionar en esta sesion.'
+    // Obtener datos del documento: cache o re-extraer desde OneDrive
+    let docData = getCachedDocumentData(codeOficio);
+
+    if (!docData) {
+      await ctx.reply('Datos no encontrados en cache. Descargando documento de OneDrive...');
+      const fileName = await findFileByCode(config.onedriveFolderPath, codeOficio);
+      if (!fileName) {
+        await ctx.reply('No se encontro el archivo del oficio en OneDrive. No se puede generar borrador.');
+        return;
+      }
+
+      const fileBuffer = await downloadFile(config.onedriveFolderPath, fileName);
+      docData = await extractDocumentData(
+        fileBuffer,
+        fileName,
+        new Date(found.entry.fechaRecepcion)
       );
     }
+
+    await generateAndSendDraft(ctx, config, docData, codeRespuesta);
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Error desconocido';

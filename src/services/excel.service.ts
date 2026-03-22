@@ -114,9 +114,6 @@ export async function updateEntryStatus(
     throw new Error(`No se encontro el oficio con codigo: ${code}`);
   }
 
-  const rowAddress = `Radicados[[#Data],[Estado]]:Radicados[[#Data],[CodeRespuesta]]`;
-
-  // Update columns E, F, G for the specific row using row index
   const range = await client
     .api(`/me/drive/items/${itemId}/workbook/tables/Radicados/rows/itemAt(index=${found.rowIndex})/range`)
     .get();
@@ -131,6 +128,28 @@ export async function updateEntryStatus(
     .patch({ values: [currentValues] });
 
   logger.info(`Oficio ${code} actualizado: estado=${estado}, respuesta=${codeRespuesta}`);
+}
+
+export async function generateResponseCode(
+  folderPath: string,
+  excelFileName: string
+): Promise<string> {
+  const entries = await getAllEntries(folderPath, excelFileName);
+  const year = new Date().getFullYear();
+  const prefix = `JCP-`;
+
+  const existingNumbers = entries
+    .map((e) => e.codeRespuesta)
+    .filter((code) => code.startsWith(prefix))
+    .map((code) => {
+      const match = code.match(/^JCP-(\d+)-/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+
+  const maxNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0;
+  const nextNumber = (maxNumber + 1).toString().padStart(3, '0');
+
+  return `JCP-${nextNumber}-${year}`;
 }
 
 export async function searchEntries(

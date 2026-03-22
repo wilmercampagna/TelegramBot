@@ -88,6 +88,43 @@ async function sessionUpload(filePath: string, content: Buffer): Promise<string>
   return result.webUrl || '';
 }
 
+export async function downloadFile(
+  folderPath: string,
+  fileName: string
+): Promise<Buffer> {
+  const client = getGraphClient();
+  const cleanPath = folderPath.replace(/^\/+|\/+$/g, '');
+  const fullPath = `/${cleanPath}/${fileName}`;
+
+  const response = await client
+    .api(`/me/drive/root:${fullPath}:/content`)
+    .responseType('arraybuffer' as any)
+    .get();
+
+  logger.info(`Archivo descargado de OneDrive: ${fullPath}`);
+  return Buffer.from(response as ArrayBuffer);
+}
+
+export async function findFileByCode(
+  folderPath: string,
+  code: string
+): Promise<string | null> {
+  const client = getGraphClient();
+  const cleanPath = folderPath.replace(/^\/+|\/+$/g, '');
+
+  try {
+    const children = await client
+      .api(`/me/drive/root:/${cleanPath}:/children`)
+      .get();
+
+    const files = children.value as Array<{ name: string }>;
+    const match = files.find((f) => f.name.includes(code));
+    return match ? match.name : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function ensureFolderExists(folderPath: string): Promise<void> {
   const client = getGraphClient();
   const parts = folderPath.replace(/^\/+|\/+$/g, '').split('/');

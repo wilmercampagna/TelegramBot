@@ -17,7 +17,7 @@ export function registerCommands(bot: Bot): void {
     await ctx.reply(
       'Comandos disponibles:\n\n' +
       '/gestionar - Responde a un documento para procesarlo\n' +
-      '/responder <codigo> <codigo_resp> - Marcar oficio como respondido\n' +
+      '/responder <codigo> - Marcar oficio como respondido (genera codigo JCP automatico)\n' +
       '/oficios - Ver todos los oficios registrados\n' +
       '/revision - Ver oficios pendientes de respuesta\n' +
       '/respondidos - Ver oficios ya respondidos\n' +
